@@ -58,5 +58,102 @@ gapminder_data_2007 <- read_csv("data/gapminder_data.csv") %>%
   filter(year == 2007 & continent == "Americas") %>%
   select(-year, -continent)
 
+#Data cleaning
+read_csv("data/co2-un-data.csv", skip=1) #ignore 1st line of csv (just an example)
+
+read_csv("data/co2-un-data.csv", 
+         skip=2,
+         col_names = c("region","country","year","series","value","footnotes","source")) #ignore first 2 lines. assign names manually
+
+read_csv("data/co2-un-data.csv", skip=1) %>%
+  rename(country = ...2)
+
+read_csv("data/co2-un-data.csv", skip=1) %>%
+  rename_all(tolower)
+
+
+## Practicing select() 
+
+co2_emissions_dirt <- read_csv("data/co2-un-data.csv", 
+         skip=2,
+         col_names = c("region","country","year","series","value","footnotes","source")) #ignore first 2 lines. assign names manually
+
+co2_emissions_dirt %>% 
+  select(country, series, year, value) %>%
+  mutate(series = recode(series,
+                         "Emissions (thousand metric tons of carbon dioxide)" = "total_emission",
+                         "Emissions per capita (metric tons of carbon dioxide)" = "per_capita_emissions")) %>%
+  pivot_wider(names_from = series, values_from = value) %>%
+  #number of obs per year
+  count(year)
+  
+co2_emissions <- co2_emissions_dirt %>% 
+  select(country, series, year, value) %>%
+  mutate(series = recode(series,
+                         "Emissions (thousand metric tons of carbon dioxide)" = "total_emission",
+                         "Emissions per capita (metric tons of carbon dioxide)" = "per_capita_emissions")) %>%
+  pivot_wider(names_from = series, values_from = value) %>%
+  filter(year == 2005) %>%
+  select(-year)
+
+
+#joining data frames
+inner_join(gapminder_data_2007, co2_emissions)
+
+anti_join(gapminder_data_2007, co2_emissions,
+          by="country")
+
+co2_emissions <- read_csv("data/co2-un-data.csv", 
+                          skip=2,
+                          col_names = c("region","country","year","series","value","footnotes","source")) %>%
+  select(country,year,series,value) %>%
+  mutate(series = recode(series,
+                         "Emissions (thousand metric tons of carbon dioxide)" = "total_emission",
+                         "Emissions per capita (metric tons of carbon dioxide)" = "per_capita_emissions")) %>%
+  pivot_wider(names_from = series, values_from = value) %>%
+  filter(year == 2005) %>%
+  select(-year) %>%
+  mutate(country = recode(country,
+                          "Bolivia (Plurin. State of)" = "Bolivia",
+                          "United States of America" = "United States",
+                          "Venezuela (Boliv. Rep. of)" = "Venezuela"))
+
+#a second anti_jopin
+anti_join(gapminder_data_2007, co2_emissions,
+          by="country")
+
+gapminder_data_2007 <- read_csv("data/gapminder_data.csv") %>%
+  filter(year == 2007 & continent == "Americas") %>%
+  select(-year, -continent) %>%
+  mutate(country = recode(country,
+                          "Puerto Rico" = "United States"))
+
+anti_join(gapminder_data_2007, co2_emissions,
+          by="country")
+
+gapminder_data_2007 <- read_csv("data/gapminder_data.csv") %>%
+  filter(year == 2007 & continent == "Americas") %>%
+  select(-year, -continent) %>%
+  mutate(country = recode(country,
+                          "Puerto Rico" = "United States")) %>%
+  group_by(country) %>%
+  summarise(lifeExp = sum(lifeExp * pop)/sum(pop),
+            gdpPercap = sum(gdpPercap * pop)/sum(pop),
+            pop = sum(pop))
+
+#try inner join again
+inner_join(gapminder_data_2007, co2_emissions,by="country")
+
+gapminder_co2 <- inner_join(gapminder_data_2007, co2_emissions,by="country")
+
+gapminder_co2 %>%
+  mutate(region = if_else(country == "Canada" | country == "United States" | country == "Mexico",
+                          "north",
+                          "south"))
+
+write_csv(gapminder_co2, "data/gapminder_co2.csv")
+
+
+
 
 
