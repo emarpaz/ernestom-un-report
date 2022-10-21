@@ -1,0 +1,86 @@
+---
+title: "Writing Reports with  R Markdown"
+author: "Ernesto Martinez"
+date: '2022-10-21'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, echo=FALSE, include=FALSE}
+library(tidyverse)
+library(here)
+library(knitr)
+```
+
+This report was prepared for the UN. It analyzes the relationship between a country's GPD, life expectancy, and CO2 emissions. Our goal was to determine to what degree a country's economic strength or weakness may be related to its public health status and impact on climate pollution. We hypothesize that both life expectancy and CO2 emissions will increase with a country's GDP. 
+
+```{r data, include=FALSE, echo=FALSE}
+gapminder_1997 <- read_csv(here("data/gapminder_1997.csv"))
+```
+
+
+
+```{r gdp_lifeexp_1997, echo=FALSE}
+ggplot(gapminder_1997, aes(x=gdpPercap,y=lifeExp,color=continent,size=pop/1000000)) +
+  geom_point() +
+  labs(x="GDP per capita",
+       y= "Life Expectancy",
+       title = "Do people in wealthy countries live longer?",
+       size = "Population (in millions)",
+       color = "Continent")
+```
+
+```{r summary_data, echo=FALSE}
+n_countries <- gapminder_1997 %>% 
+  select(country) %>%
+  n_distinct()
+
+min_gdp <- gapminder_1997 %>%
+  select(country,gdpPercap) %>%
+  filter(gdpPercap == min(gdpPercap))
+
+max_gdp <- gapminder_1997 %>%
+  select(country,gdpPercap) %>%
+  filter(gdpPercap == max(gdpPercap))
+
+min_gdp1 <- gapminder_1997 %>%
+  select(gdpPercap) %>%
+  filter(gdpPercap == min(gdpPercap))
+
+max_gdp1 <- gapminder_1997 %>%
+  select(gdpPercap) %>%
+  filter(gdpPercap == max(gdpPercap))
+
+gapminder_1997 %>%
+  summarise(min=round(min(gdpPercap)))
+
+gapminder_1997 %>%
+  summarise(max=round(max(gdpPercap)))
+```
+
+The above plot shows the relationship between our GDP per capita and life expectancy for a total of `r n_countries` countries. For this set of countries, economic wealth ranged from a minimum of $`r min_gdp$gdpPercap[1]` in `r min_gdp$country[1]` to a maximum of $`r max_gdp$gdpPercap[1]` per capita in `r max_gdp$country[1]`. 
+
+The above plot shows the relationship between our GDP per capita and life expectancy for a total of `r n_countries` countries. For this set of countries, economic wealth ranged from a minimum of $`r min_gdp1` to a maximum of $`r max_gdp1`. 
+
+
+| Summary of Data   |
+|----------|--------|
+| Number of Countries | `r n_countries` |
+| Minimum GDP per cap | $`r min_gdp1` |
+| Maximum GDP per cap | $`r max_gdp1` |
+
+
+```{r tables}
+gapminder_1997 %>%
+  filter(continent == "Oceania") %>%
+  kable()
+  
+
+
+```
+
+
+
